@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#18334e">
+  <title>Pingwin na sankach</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #10243b;
+      color: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: radial-gradient(ellipse at 50% 0%, #294e70 0, transparent 55%), #10243b;
+    }
+
+    .game {
+      width: min(100%, 940px);
+      overflow: hidden;
+      border: 1px solid #ffffff30;
+      border-radius: 22px;
+      background: #18334e;
+      box-shadow: 0 24px 70px #0006;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); }
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pill { border-radius: 999px; padding: 7px 12px; background: #ffffff16; font-weight: 700; font-size: 14px; }
+    .stage { position: relative; background: #bce7f7; }
+    canvas { display: block; width: 100%; height: auto; touch-action: none; }
+
+    .panel {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #0e223b8c;
+      text-align: center;
+    }
+
+    .panel[hidden] { display: none; }
+    .card { width: min(100%, 430px); padding: 24px; border: 1px solid #ffffff45; border-radius: 20px; background: #153651ed; box-shadow: 0 16px 40px #0004; }
+    .card h2 { margin: 0 0 8px; font-size: 26px; }
+    .card p { margin: 8px 0 18px; line-height: 1.5; color: #e2f2ff; }
+
+    input {
+      width: 100%;
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border: 1px solid #ffffff50;
+      border-radius: 12px;
+      background: #ffffff16;
+      color: white;
+      font: inherit;
+    }
+
+    input::placeholder { color: #c4d7e8; }
+    button { border: 0; border-radius: 12px; padding: 11px 16px; background: #ffd166; color: #17314b; font: inherit; font-weight: 800; cursor: pointer; }
+    button:hover { filter: brightness(1.06); }
+    button:disabled { cursor: default; opacity: .6; }
+    .controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px 16px; color: #d7e9f8; font-size: 14px; }
+    .move-buttons { display: flex; gap: 10px; }
+    .move-buttons button { min-width: 62px; font-size: 20px; }
+
+    @media (max-width: 600px) {
+      body { padding: 8px; }
+      header { padding: 12px; }
+      .controls { justify-content: center; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header>
+      <h1>🐧 Pingwin na sankach</h1>
+      <div class="stats" aria-live="polite">
+        <span class="pill">Wynik: <span id="score">0</span></span>
+        <span class="pill">Najlepszy: <span id="best">0</span></span>
+        <span class="pill">Punkty: <span id="total">0</span></span>
+        <span class="pill">Doładowanie: <span id="boost">0</span>%</span>
+      </div>
+    </header>
+
+    <section class="stage">
+      <canvas id="canvas" width="900" height="600" aria-label="Gra: zjazd pingwina na sankach"></canvas>
+      <div class="panel" id="panel">
+        <div class="card">
+          <h2 id="panelTitle">Gotowi na zjazd?</h2>
+          <p id="panelText">Omijaj przeszkody, zbieraj śnieżynki i napełnij doładowanie. Zbierz 300 punktów, aby odblokować nowe sanki!</p>
+          <input id="playerName" maxlength="16" placeholder="Wpisz swój pseudonim" aria-label="Pseudonim gracza" autocomplete="nickname">
+          <button id="startButton">Start!</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="controls">
+      <span>Sterowanie: ← → lub A / D. Spacja: doładowanie.</span>
+      <div class="move-buttons">
+        <button id="leftButton" aria-label="Skręć w lewo">←</button>
+        <button id="boostButton" disabled>Doładuj ⚡</button>
+        <button id="rightButton" aria-label="Skręć w prawo">→</button>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.querySelector("#canvas");
+      const ctx = canvas.getContext("2d");
+      const scoreEl = document.querySelector("#score");
+      const bestEl = document.querySelector("#best");
+      const totalEl = document.querySelector("#total");
+      const boostEl = document.querySelector("#boost");
+      const panel = document.querySelector("#panel");
+      const titleEl = document.querySelector("#panelTitle");
+      const textEl = document.querySelector("#panelText");
+      const nameInput = document.querySelector("#playerName");
+      const startButton = document.querySelector("#startButton");
+      const boostButton = document.querySelector("#boostButton");
+      const UNLOCK_COST = 300;
+
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem("sledGameSave") || "{}"); } catch { saved = {}; }
+      let playerName = typeof saved.name === "string" ? saved.name : "";
+      let totalPoints = Number(saved.totalPoints) || 0;
+      let bestScore = Number(saved.bestScore) || 0;
+      let unlocked = Boolean(saved.unlocked);
+      let state = "ready";
+      let score = 0;
+      let boostCharge = 0;
+      let boostTime = 0;
+      let playerX = 450;
+      let targetX = 450;
+      let objects = [];
+      let lastTime = 0;
+      let spawnTimer = 0;
+      let distance = 0;
+      const keys = {};
+      let pointerDirection = 0;
+
+      nameInput.value = playerName;
+      updateHud();
+      draw();
+
+      function save() {
+        try {
+          localStorage.setItem("sledGameSave", JSON.stringify({ name: playerName, totalPoints, bestScore, unlocked }));
+        } catch { /* Gra nadal działa, jeśli przeglądarka blokuje zapis lokalny. */ }
+      }
+
+      function updateHud() {
+        scoreEl.textContent = Math.floor(score);
+        bestEl.textContent = bestScore;
+        totalEl.textContent = totalPoints;
+        boostEl.textContent = Math.floor(boostCharge);
+        boostButton.disabled = boostCharge < 100 || state !== "running";
+      }
+
+      function startGame() {
+        playerName = nameInput.value.trim().slice(0, 16) || "Pingwinek";
+        nameInput.value = playerName;
+        save();
+        score = 0;
+        boostCharge = 0;
+        boostTime = 0;
+        playerX = 450;
+        targetX = 450;
+        objects = [];
+        distance = 0;
+        spawnTimer = 0;
+        lastTime = performance.now();
+        state = "running";
+        panel.hidden = true;
+        requestAnimationFrame(loop);
+      }
+
+      function finishGame() {
+        state = "over";
+        bestScore = Math.max(bestScore, Math.floor(score));
+        save();
+        updateHud();
+        titleEl.textContent = "Koniec zjazdu!";
+        textEl.textContent = `${playerName}, zdobywasz ${Math.floor(score)} punktów. Zebrane punkty zostają z Tobą — jeszcze ${Math.max(0, UNLOCK_COST - totalPoints)} do nowych sanek.`;
+        startButton.textContent = "Jeszcze raz";
+        panel.hidden = false;
+      }
+
+      function activateBoost() {
+        if (state === "running" && boostCharge >= 100 && boostTime <= 0) {
+          boostCharge = 0;
+          boostTime = 3;
+          updateHud();
+        }
+      }
+
+      function loop(now) {
+        if (state !== "running") return;
+        const dt = Math.min((now - lastTime) / 1000, 0.04);
+        lastTime = now;
+        const difficulty = 1 + Math.min(distance / 2200, 1.8);
+        const speed = (240 + difficulty * 55) * (boostTime > 0 ? 1.7 : 1);
+        distance += speed * dt;
+        score += dt * (10 + difficulty * 2);
+        boostTime = Math.max(0, boostTime - dt);
+
+        const steer = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0) + pointerDirection;
+        if (steer) targetX += steer * 430 * dt;
+        targetX = Math.max(90, Math.min(810, targetX));
+        playerX += (targetX - playerX) * Math.min(1, dt * 9);
+
+        spawnTimer -= dt;
+        if (spawnTimer <= 0) {
+          objects.push({ x: 110 + Math.random() * 680, y: -45, type: Math.random() < 0.68 ? "rock" : "flake", size: Math.random() < 0.5 ? 24 : 30 });
+          spawnTimer = Math.max(0.38, 0.95 - difficulty * 0.16) + Math.random() * 0.32;
+        }
+
+        for (const obj of objects) obj.y += speed * dt;
+        objects = objects.filter(obj => obj.y < 670);
+
+        for (const obj of objects) {
+          const dx = playerX - obj.x;
+          const dy = 500 - obj.y;
+          if (Math.hypot(dx, dy) < (obj.type === "flake" ? 36 : 39)) {
+            if (obj.type === "flake") {
+              obj.y = 1000;
+              score += 25;
+              totalPoints += 25;
+              boostCharge = Math.min(100, boostCharge + 35);
+              if (!unlocked && totalPoints >= UNLOCK_COST) {
+                unlocked = true;
+                titleEl.textContent = "Nowe sanki odblokowane! 🛷";
+                textEl.textContent = "Świetna jazda! Twoje nowe sanki są już dostępne.";
+                save();
+              }
+            } else if (boostTime <= 0) {
+              save();
+              finishGame();
+              return;
+            }
+          }
+        }
+
+        updateHud();
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      function draw() {
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#bce7f7";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "#8fc6df";
+        triangle(0, 190, 185, 35, 360, 190);
+        triangle(250, 190, 520, 20, 760, 190);
+        triangle(600, 190, 805, 48, 1010, 190);
+        ctx.fillStyle = "#ffffff";
+        triangle(140, 80, 185, 35, 230, 80);
+        triangle(465, 57, 520, 20, 575, 61);
+        triangle(760, 83, 805, 48, 850, 83);
+
+        ctx.fillStyle = "#f4fbff";
+        ctx.beginPath();
+        ctx.moveTo(160, 150);
+        ctx.lineTo(740, 150);
+        ctx.lineTo(900, 600);
+        ctx.lineTo(0, 600);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#d5edf7";
+        ctx.lineWidth = 5;
+        ctx.setLineDash([25, 30]);
+        ctx.lineDashOffset = -distance % 55;
+        ctx.beginPath();
+        ctx.moveTo(450, 160);
+        ctx.lineTo(450, 600);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.strokeStyle = "#dceff7";
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 10; i++) {
+          const y = (i * 83 + distance * 0.75) % 620;
+          ctx.beginPath();
+          ctx.moveTo(30 + (i % 3) * 90, y);
+          ctx.lineTo(80 + (i % 3) * 90, y + 18);
+          ctx.stroke();
+        }
+
+        for (const obj of objects) {
+          if (obj.type === "flake") drawFlake(obj.x, obj.y);
+          else drawRock(obj.x, obj.y, obj.size);
+        }
+        drawPenguin(playerX, 500, unlocked);
+        if (boostTime > 0) {
+          ctx.strokeStyle = "#ffd166";
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.arc(playerX, 500, 48 + Math.sin(performance.now() / 70) * 5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (state === "running") {
+          ctx.fillStyle = "#18334e";
+          ctx.font = "bold 20px system-ui";
+          ctx.fillText(boostTime > 0 ? "DOŁADOWANIE!" : "Zbieraj śnieżynki!", 24, 38);
+        }
+      }
+
+      function triangle(x1, y1, x2, y2, x3, y3) {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x3, y3);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawFlake(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(0, 0, 19, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#31a8d1";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        for (let i = 0; i < 3; i++) {
+          ctx.rotate(Math.PI / 3);
+          ctx.beginPath();
+          ctx.moveTo(-13, 0);
+          ctx.lineTo(13, 0);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawRock(x, y, size) {
+        ctx.fillStyle = "#75899a";
+        ctx.beginPath();
+        ctx.ellipse(x, y + 5, size, size * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#9eafba";
+        ctx.beginPath();
+        ctx.ellipse(x - 6, y, size * 0.55, size * 0.3, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawPenguin(x, y, hasNewSled) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.strokeStyle = hasNewSled ? "#ff8c42" : "#b24857";
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-28, 17);
+        ctx.quadraticCurveTo(0, 30, 28, 17);
+        ctx.stroke();
+        ctx.strokeStyle = "#e8f7ff";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-25, 23);
+        ctx.lineTo(25, 23);
+        ctx.stroke();
+
+        ctx.fillStyle = "#18334e";
+        ctx.beginPath();
+        ctx.ellipse(0, -8, 24, 31, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(0, -3, 15, 22, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#18334e";
+        ctx.beginPath();
+        ctx.arc(0, -31, 19, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(-7, -33, 5, 0, Math.PI * 2);
+        ctx.arc(7, -33, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#18334e";
+        ctx.beginPath();
+        ctx.arc(-6, -33, 2, 0, Math.PI * 2);
+        ctx.arc(8, -33, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffad42";
+        triangle(-5, -25, 5, -25, 0, -18);
+        ctx.restore();
+      }
+
+      startButton.addEventListener("click", startGame);
+      boostButton.addEventListener("click", activateBoost);
+      window.addEventListener("keydown", event => {
+        keys[event.key] = true;
+        if (event.code === "Space") { event.preventDefault(); activateBoost(); }
+      });
+      window.addEventListener("keyup", event => { keys[event.key] = false; });
+
+      for (const [id, direction] of [["leftButton", -1], ["rightButton", 1]]) {
+        const button = document.querySelector("#" + id);
+        button.addEventListener("pointerdown", event => { event.preventDefault(); pointerDirection = direction; });
+        const stop = () => { pointerDirection = 0; };
+        button.addEventListener("pointerup", stop);
+        button.addEventListener("pointerleave", stop);
+        button.addEventListener("pointercancel", stop);
+      }
+
+      canvas.addEventListener("pointermove", event => {
+        if (state !== "running" || (event.pointerType === "mouse" && event.buttons === 0)) return;
+        const rect = canvas.getBoundingClientRect();
+        targetX = Math.max(90, Math.min(810, (event.clientX - rect.left) * canvas.width / rect.width));
+      });
+      canvas.addEventListener("pointerdown", event => {
+        if (event.pointerType === "touch') return;
+        const rect = canvas.getBoundingClientRect();
+        targetX = Math.max(90, Math.min(810, (event.clientX - rect.left) * canvas.width / rect.width));
+      });
+    })();
+  </script>
+</body>
+</html>
