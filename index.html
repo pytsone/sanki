@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#18334e">
   <title>Pingwin na sankach</title>
   <style>
@@ -12,34 +12,50 @@
     .game { width: min(100%, 940px); overflow: hidden; border: 1px solid #ffffff30; border-radius: 22px; background: #18334e; box-shadow: 0 24px 70px #0006; }
     header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; flex-wrap: wrap; }
     h1 { margin: 0; font-size: clamp(20px, 4vw, 28px); }
-    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
-    .pill { border-radius: 999px; padding: 7px 12px; background: #ffffff16; font-weight: 700; font-size: 14px; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { border-radius: 999px; padding: 7px 11px; background: #ffffff16; font-weight: 700; font-size: 13px; }
     .stage { position: relative; background: #bce7f7; }
-    canvas { display: block; width: 100%; height: auto; touch-action: none; }
-    .panel { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 16px; background: #0e223b8c; text-align: center; }
+    canvas { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; touch-action: none; }
+    .panel { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 12px; background: #0e223b9c; text-align: center; }
     .panel[hidden] { display: none; }
-    .card { display: flex; flex: 0 0 auto; flex-direction: column; gap: 12px; width: min(100%, 430px); padding: 24px; border: 1px solid #ffffff45; border-radius: 20px; background: #153651ed; box-shadow: 0 16px 40px #0004; }
-    .card h2 { margin: 0; font-size: 26px; }
-    .card p { margin: 0 0 4px; line-height: 1.5; color: #e2f2ff; }
-    input { display: block; width: 100%; min-width: 0; margin: 0; padding: 12px 14px; border: 1px solid #ffffff50; border-radius: 12px; background: #ffffff16; color: white; font: inherit; }
+    .card { display: flex; flex: 0 0 auto; flex-direction: column; gap: 10px; width: min(100%, 470px); max-height: 100%; overflow-y: auto; padding: 20px; border: 1px solid #ffffff45; border-radius: 20px; background: #153651f5; box-shadow: 0 16px 40px #0004; }
+    .card h2 { margin: 0; font-size: 25px; }
+    .card p { margin: 0; line-height: 1.4; color: #e2f2ff; }
+    .field { display: grid; gap: 5px; text-align: left; color: #d7e9f8; font-size: 13px; font-weight: 700; }
+    input, select { width: 100%; min-width: 0; min-height: 42px; padding: 9px 12px; border: 1px solid #ffffff50; border-radius: 11px; background: #ffffff16; color: #fff; font: inherit; }
+    select option { color: #10243b; }
     input::placeholder { color: #c4d7e8; }
-    button { display: block; border: 0; border-radius: 12px; padding: 11px 16px; background: #ffd166; color: #17314b; font: inherit; font-weight: 800; cursor: pointer; }
-    .card button { width: 100%; min-height: 46px; }
+    button { border: 0; border-radius: 12px; padding: 11px 16px; background: #ffd166; color: #17314b; font: inherit; font-weight: 800; cursor: pointer; touch-action: none; }
     button:hover { filter: brightness(1.06); }
-    button:disabled { cursor: default; opacity: .6; }
+    button:disabled { cursor: default; opacity: .55; }
+    .card button { width: 100%; min-height: 44px; }
+    .ranking { margin: 2px 0 0; padding: 0; list-style: none; text-align: left; }
+    .ranking li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 8px; border-bottom: 1px solid #ffffff17; color: #eaf6ff; font-size: 13px; }
+    .ranking li:first-child { color: #ffd166; font-weight: 800; }
+    .ranking-title { margin: 2px 0 -7px; text-align: left; font-size: 15px; }
     .controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px 16px; color: #d7e9f8; font-size: 14px; }
-    .move-buttons { display: flex; gap: 10px; }
-    .move-buttons button { min-width: 62px; font-size: 20px; }
+    .move-buttons { display: flex; gap: 10px; align-items: center; }
+    .move-buttons button { min-width: 58px; min-height: 48px; font-size: 20px; }
+    #boostButton { min-width: 130px; font-size: 14px; }
+    .hint { margin: 0; color: #c8dcec; font-size: 12px; }
     @media (max-width: 600px) {
       body { display: block; padding: 8px; }
-      header { padding: 12px; }
-      .controls { justify-content: center; text-align: center; }
-      .panel { align-items: flex-start; padding: 10px; }
-      .card { width: 100%; max-width: 360px; gap: 8px; padding: 14px; margin: auto; }
-      .card h2 { font-size: 21px; }
-      .card p { margin-bottom: 2px; font-size: 14px; line-height: 1.35; }
-      .card input { min-height: 42px; }
-      .card button { min-height: 44px; }
+      .game { border-radius: 16px; }
+      header { padding: 10px; }
+      .stats { gap: 5px; }
+      .pill { padding: 6px 8px; font-size: 12px; }
+      .controls { justify-content: center; text-align: center; padding: 10px 8px 14px; }
+      .move-buttons { width: 100%; justify-content: center; gap: 12px; }
+      .move-buttons button { min-width: 68px; min-height: 54px; }
+      #boostButton { flex: 1; max-width: 180px; }
+      .panel { align-items: flex-start; padding: 8px; }
+      .card { width: 100%; max-width: 390px; gap: 7px; padding: 12px; margin: auto; }
+      .card h2 { font-size: 20px; }
+      .card p { font-size: 13px; line-height: 1.3; }
+      .field { gap: 3px; font-size: 12px; }
+      input, select { min-height: 38px; padding: 7px 10px; font-size: 14px; }
+      .card button { min-height: 40px; padding: 8px 12px; }
+      .ranking li { padding: 3px 6px; font-size: 12px; }
     }
   </style>
 </head>
@@ -49,8 +65,8 @@
       <h1>🐧 Pingwin na sankach</h1>
       <div class="stats" aria-live="polite">
         <span class="pill">Wynik: <span id="score">0</span></span>
-        <span class="pill">Najlepszy: <span id="best">0</span></span>
-        <span class="pill">Punkty: <span id="total">0</span></span>
+        <span class="pill">Rekord: <span id="best">0</span></span>
+        <span class="pill">Śnieżynki: <span id="total">0</span></span>
         <span class="pill">Doładowanie: <span id="boost">0</span>%</span>
       </div>
     </header>
@@ -59,62 +75,123 @@
       <div class="panel" id="panel">
         <div class="card">
           <h2 id="panelTitle">Gotowi na zjazd?</h2>
-          <p id="panelText">Omijaj przeszkody, zbieraj śnieżynki i napełnij doładowanie. Zbierz 300 punktów, aby odblokować nowe sanki!</p>
-          <input id="playerName" maxlength="16" placeholder="Wpisz swój pseudonim" aria-label="Pseudonim gracza" autocomplete="nickname">
+          <p id="panelText">Zbieraj śnieżynki, omijaj kamienie i odblokuj nowe trasy oraz sanki!</p>
+          <label class="field">Nazwa gracza
+            <input id="playerName" maxlength="16" placeholder="Wpisz pseudonim" autocomplete="nickname">
+          </label>
+          <label class="field">Trasa
+            <select id="routeSelect"></select>
+          </label>
+          <label class="field">Sanki
+            <select id="sledSelect"></select>
+          </label>
           <button id="startButton" type="button">Start!</button>
+          <h3 class="ranking-title">🏆 Ranking na tym urządzeniu</h3>
+          <ol class="ranking" id="ranking"></ol>
+          <p class="hint">Postęp i ranking zapisują się tylko w tej przeglądarce.</p>
         </div>
       </div>
     </section>
     <footer class="controls">
-      <span>Sterowanie: ← → lub A / D. Spacja: doładowanie.</span>
+      <span>Sterowanie: strzałki / A-D, przeciągnij pingwina lub użyj przycisków.</span>
       <div class="move-buttons">
-        <button id="leftButton" type="button" aria-label="Skręć w lewo">←</button>
+        <button id="leftButton" type="button" aria-label="Skręć w lewo">◀</button>
         <button id="boostButton" type="button" disabled>Doładuj ⚡</button>
-        <button id="rightButton" type="button" aria-label="Skręć w prawo">→</button>
+        <button id="rightButton" type="button" aria-label="Skręć w prawo">▶</button>
       </div>
     </footer>
   </main>
   <script>
     (() => {
+      'use strict';
       const canvas = document.getElementById('canvas');
       const ctx = canvas.getContext('2d');
-      const scoreEl = document.getElementById('score');
-      const bestEl = document.getElementById('best');
-      const totalEl = document.getElementById('total');
-      const boostEl = document.getElementById('boost');
-      const panel = document.getElementById('panel');
-      const titleEl = document.getElementById('panelTitle');
-      const textEl = document.getElementById('panelText');
-      const nameInput = document.getElementById('playerName');
-      const startButton = document.getElementById('startButton');
-      const boostButton = document.getElementById('boostButton');
-      const unlockCost = 300;
-
+      const $ = id => document.getElementById(id);
+      const scoreEl = $('score'), bestEl = $('best'), totalEl = $('total'), boostEl = $('boost');
+      const panel = $('panel'), titleEl = $('panelTitle'), textEl = $('panelText');
+      const nameInput = $('playerName'), routeSelect = $('routeSelect'), sledSelect = $('sledSelect');
+      const startButton = $('startButton'), boostButton = $('boostButton');
+      const ROUTES = [
+        { id: 'forest', name: 'Leśny stok', unlock: 0, speed: 1, density: 1, rock: .66, sky: '#bce7f7', mountain: '#8fc6df', snow: '#f4fbff', line: '#d5edf7' },
+        { id: 'ice', name: 'Lodowa przełęcz', unlock: 350, speed: 1.22, density: 1.18, rock: .72, sky: '#a4d8f3', mountain: '#6fadd4', snow: '#eaf7ff', line: '#c4e6f5' },
+        { id: 'night', name: 'Nocna góra', unlock: 900, speed: 1.42, density: 1.32, rock: .76, sky: '#607ba8', mountain: '#405b86', snow: '#e1eaff', line: '#bfcee8' }
+      ];
+      const SLEDS = [
+        { id: 'classic', name: 'Klasyczne sanki', cost: 0, color: '#b24857' },
+        { id: 'sunset', name: 'Pomarańczowe sanki — 300 śnieżynek', cost: 300, color: '#ff8c42' },
+        { id: 'gold', name: 'Złote sanki — 800 śnieżynek', cost: 800, color: '#e2b833' }
+      ];
+      const SAVE_KEY = 'sledGameSaveV2';
       let saved = {};
-      try { saved = JSON.parse(localStorage.getItem('sledGameSave') || '{}'); } catch { saved = {}; }
+      try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch { saved = {}; }
       let playerName = typeof saved.name === 'string' ? saved.name : '';
-      let totalPoints = Number(saved.totalPoints) || 0;
-      let bestScore = Number(saved.bestScore) || 0;
-      let unlocked = Boolean(saved.unlocked);
-      let state = 'ready';
-      let score = 0;
-      let boostCharge = 0;
-      let boostTime = 0;
-      let playerX = 450;
-      let targetX = 450;
-      let objects = [];
-      let lastTime = 0;
-      let spawnTimer = 0;
-      let distance = 0;
-      const keys = {};
-      let pointerDirection = 0;
+      let totalPoints = Math.max(0, Number(saved.totalPoints) || 0);
+      let bestScore = Math.max(0, Number(saved.bestScore) || 0);
+      let selectedRoute = typeof saved.route === 'string' ? saved.route : 'forest';
+      let selectedSled = typeof saved.sled === 'string' ? saved.sled : 'classic';
+      let ranking = Array.isArray(saved.ranking) ? saved.ranking.filter(row => row && typeof row.name === 'string' && Number.isFinite(Number(row.score))) : [];
+      let state = 'ready', score = 0, boostCharge = 0, boostTime = 0;
+      let playerX = 450, targetX = 450, objects = [], lastTime = 0, spawnTimer = 0, distance = 0;
+      let activeRoute = ROUTES[0];
+      const keys = Object.create(null);
+      const heldDirections = new Set();
+      let dragging = false;
 
       nameInput.value = playerName;
+      populateSelectors();
+      renderRanking();
       updateHud();
       draw();
 
       function save() {
-        try { localStorage.setItem('sledGameSave', JSON.stringify({ name: playerName, totalPoints, bestScore, unlocked })); } catch { /* Localny zapis może być niedostępny w trybie prywatnym. */ }
+        try {
+          localStorage.setItem(SAVE_KEY, JSON.stringify({ name: playerName, totalPoints, bestScore, route: selectedRoute, sled: selectedSled, ranking }));
+        } catch (error) { /* Gra działa także wtedy, gdy zapis lokalny jest wyłączony. */ }
+      }
+
+      function populateSelectors() {
+        routeSelect.replaceChildren();
+        for (const route of ROUTES) {
+          const option = document.createElement('option');
+          option.value = route.id;
+          option.textContent = route.unlock > bestScore ? `${route.name} — rekord ${route.unlock}, aby odblokować` : route.name;
+          option.disabled = route.unlock > bestScore;
+          routeSelect.append(option);
+        }
+        if (!ROUTES.some(route => route.id === selectedRoute && route.unlock <= bestScore)) selectedRoute = 'forest';
+        routeSelect.value = selectedRoute;
+
+        sledSelect.replaceChildren();
+        for (const sled of SLEDS) {
+          const option = document.createElement('option');
+          option.value = sled.id;
+          option.textContent = sled.cost > totalPoints ? `${sled.name} — brakuje ${sled.cost - totalPoints}` : sled.name;
+          option.disabled = sled.cost > totalPoints;
+          sledSelect.append(option);
+        }
+        if (!SLEDS.some(sled => sled.id === selectedSled && sled.cost <= totalPoints)) selectedSled = 'classic';
+        sledSelect.value = selectedSled;
+      }
+
+      function renderRanking() {
+        ranking.sort((a, b) => Number(b.score) - Number(a.score));
+        const rows = ranking.slice(0, 5);
+        $('ranking').replaceChildren();
+        if (!rows.length) {
+          const empty = document.createElement('li');
+          empty.textContent = 'Zagraj, aby zapisać pierwszy wynik!';
+          $('ranking').append(empty);
+          return;
+        }
+        rows.forEach((row, index) => {
+          const li = document.createElement('li');
+          const left = document.createElement('span');
+          left.textContent = `${index + 1}. ${row.name} · ${row.routeName}`;
+          const right = document.createElement('strong');
+          right.textContent = `${Math.floor(Number(row.score))} pkt`;
+          li.append(left, right);
+          $('ranking').append(li);
+        });
       }
 
       function updateHud() {
@@ -127,16 +204,14 @@
 
       function startGame() {
         playerName = nameInput.value.trim().slice(0, 16) || 'Pingwinek';
+        selectedRoute = routeSelect.value;
+        selectedSled = sledSelect.value;
+        activeRoute = ROUTES.find(route => route.id === selectedRoute && route.unlock <= bestScore) || ROUTES[0];
         nameInput.value = playerName;
         save();
-        score = 0;
-        boostCharge = 0;
-        boostTime = 0;
-        playerX = 450;
-        targetX = 450;
-        objects = [];
-        distance = 0;
-        spawnTimer = 0;
+        score = 0; boostCharge = 0; boostTime = 0;
+        playerX = 450; targetX = 450; objects = []; distance = 0; spawnTimer = 0;
+        heldDirections.clear(); dragging = false;
         lastTime = performance.now();
         state = 'running';
         panel.hidden = true;
@@ -145,11 +220,17 @@
 
       function finishGame() {
         state = 'over';
-        bestScore = Math.max(bestScore, Math.floor(score));
+        const finalScore = Math.floor(score);
+        bestScore = Math.max(bestScore, finalScore);
+        ranking.push({ name: playerName, score: finalScore, routeName: activeRoute.name, playedAt: Date.now() });
+        ranking.sort((a, b) => Number(b.score) - Number(a.score));
+        ranking = ranking.slice(0, 10);
         save();
+        populateSelectors();
+        renderRanking();
         updateHud();
         titleEl.textContent = 'Koniec zjazdu!';
-        textEl.textContent = `${playerName}, zdobywasz ${Math.floor(score)} punktów. Zebrane punkty zostają z Tobą — jeszcze ${Math.max(0, unlockCost - totalPoints)} do nowych sanek.`;
+        textEl.textContent = `${playerName}, wynik: ${finalScore} pkt na trasie „${activeRoute.name}”. Zebrane śnieżynki: ${totalPoints}.`;
         startButton.textContent = 'Jeszcze raz';
         panel.hidden = false;
       }
@@ -167,40 +248,38 @@
         const dt = Math.min((now - lastTime) / 1000, 0.04);
         lastTime = now;
         const difficulty = 1 + Math.min(distance / 2200, 1.8);
-        const speed = (240 + difficulty * 55) * (boostTime > 0 ? 1.7 : 1);
+        const speed = (240 + difficulty * 55) * activeRoute.speed * (boostTime > 0 ? 1.7 : 1);
         distance += speed * dt;
-        score += dt * (10 + difficulty * 2);
+        score += dt * (10 + difficulty * 2) * activeRoute.speed;
         boostTime = Math.max(0, boostTime - dt);
 
-        const steer = ((keys.ArrowRight || keys.d || keys.D) ? 1 : 0) - ((keys.ArrowLeft || keys.a || keys.A) ? 1 : 0) + pointerDirection;
-        if (steer) targetX += steer * 430 * dt;
-        targetX = Math.max(90, Math.min(810, targetX));
-        playerX += (targetX - playerX) * Math.min(1, dt * 9);
+        const steer = (keys.ArrowRight || keys.d || keys.D || heldDirections.has(1) ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A || heldDirections.has(-1) ? 1 : 0);
+        if (steer) targetX += steer * 520 * dt;
+        targetX = Math.max(75, Math.min(825, targetX));
+        playerX += (targetX - playerX) * Math.min(1, dt * 12);
 
         spawnTimer -= dt;
         if (spawnTimer <= 0) {
-          objects.push({ x: 110 + Math.random() * 680, y: -45, type: Math.random() < 0.68 ? 'rock' : 'flake', size: Math.random() < 0.5 ? 24 : 30 });
-          spawnTimer = Math.max(0.38, 0.95 - difficulty * 0.16) + Math.random() * 0.32;
+          objects.push({ x: 100 + Math.random() * 700, y: -45, type: Math.random() < activeRoute.rock ? 'rock' : 'flake', size: 23 + Math.random() * 7 });
+          spawnTimer = Math.max(0.34, (0.95 - difficulty * 0.16) / activeRoute.density) + Math.random() * 0.3;
         }
         for (const obj of objects) obj.y += speed * dt;
         objects = objects.filter(obj => obj.y < 670);
 
         for (const obj of objects) {
-          if (Math.hypot(playerX - obj.x, 500 - obj.y) < (obj.type === 'flake' ? 36 : 39)) {
+          if (obj.y < 1000 && Math.hypot(playerX - obj.x, 500 - obj.y) < (obj.type === 'flake' ? 36 : 39)) {
             if (obj.type === 'flake') {
               obj.y = 1000;
               score += 25;
               totalPoints += 25;
               boostCharge = Math.min(100, boostCharge + 35);
-              if (!unlocked && totalPoints >= unlockCost) {
-                unlocked = true;
-                titleEl.textContent = 'Nowe sanki odblokowane! 🛷';
-                textEl.textContent = 'Świetna jazda! Twoje nowe sanki są już dostępne.';
-              }
+              populateSelectors();
               save();
             } else if (boostTime <= 0) {
               finishGame();
               return;
+            } else {
+              obj.y = 1000;
             }
           }
         }
@@ -210,59 +289,29 @@
       }
 
       function draw() {
+        const route = state === 'running' ? activeRoute : (ROUTES.find(item => item.id === routeSelect.value) || ROUTES[0]);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#bce7f7';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#8fc6df';
-        triangle(0, 190, 185, 35, 360, 190);
-        triangle(250, 190, 520, 20, 760, 190);
-        triangle(600, 190, 805, 48, 1010, 190);
-        ctx.fillStyle = '#fff';
-        triangle(140, 80, 185, 35, 230, 80);
-        triangle(465, 57, 520, 20, 575, 61);
-        triangle(760, 83, 805, 48, 850, 83);
-        ctx.fillStyle = '#f4fbff';
-        ctx.beginPath();
-        ctx.moveTo(160, 150);
-        ctx.lineTo(740, 150);
-        ctx.lineTo(900, 600);
-        ctx.lineTo(0, 600);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = '#d5edf7';
-        ctx.lineWidth = 5;
-        ctx.setLineDash([25, 30]);
-        ctx.lineDashOffset = -distance % 55;
-        ctx.beginPath();
-        ctx.moveTo(450, 160);
-        ctx.lineTo(450, 600);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.strokeStyle = '#dceff7';
-        ctx.lineWidth = 3;
+        ctx.fillStyle = route.sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = route.mountain;
+        triangle(0, 190, 185, 35, 360, 190); triangle(250, 190, 520, 20, 760, 190); triangle(600, 190, 805, 48, 1010, 190);
+        ctx.fillStyle = route.snow;
+        triangle(140, 80, 185, 35, 230, 80); triangle(465, 57, 520, 20, 575, 61); triangle(760, 83, 805, 48, 850, 83);
+        ctx.fillStyle = route.snow;
+        ctx.beginPath(); ctx.moveTo(160, 150); ctx.lineTo(740, 150); ctx.lineTo(900, 600); ctx.lineTo(0, 600); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = route.line; ctx.lineWidth = 5; ctx.setLineDash([25, 30]); ctx.lineDashOffset = -distance % 55;
+        ctx.beginPath(); ctx.moveTo(450, 160); ctx.lineTo(450, 600); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = route.line; ctx.lineWidth = 3;
         for (let i = 0; i < 10; i++) {
           const y = (i * 83 + distance * 0.75) % 620;
-          ctx.beginPath();
-          ctx.moveTo(30 + (i % 3) * 90, y);
-          ctx.lineTo(80 + (i % 3) * 90, y + 18);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(30 + (i % 3) * 90, y); ctx.lineTo(80 + (i % 3) * 90, y + 18); ctx.stroke();
         }
-        for (const obj of objects) {
-          if (obj.type === 'flake') drawFlake(obj.x, obj.y);
-          else drawRock(obj.x, obj.y, obj.size);
-        }
-        drawPenguin(playerX, 500, unlocked);
-        if (boostTime > 0) {
-          ctx.strokeStyle = '#ffd166';
-          ctx.lineWidth = 8;
-          ctx.beginPath();
-          ctx.arc(playerX, 500, 48 + Math.sin(performance.now() / 70) * 5, 0, Math.PI * 2);
-          ctx.stroke();
-        }
+        for (const obj of objects) { if (obj.y < 670) obj.type === 'flake' ? drawFlake(obj.x, obj.y) : drawRock(obj.x, obj.y, obj.size); }
+        const sled = SLEDS.find(item => item.id === selectedSled) || SLEDS[0];
+        drawPenguin(playerX, 500, sled.color);
+        if (boostTime > 0) { ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(playerX, 500, 48 + Math.sin(performance.now() / 70) * 5, 0, Math.PI * 2); ctx.stroke(); }
         if (state === 'running') {
-          ctx.fillStyle = '#18334e';
-          ctx.font = 'bold 20px system-ui';
-          ctx.fillText(boostTime > 0 ? 'DOŁADOWANIE!' : 'Zbieraj śnieżynki!', 24, 38);
+          ctx.fillStyle = '#18334e'; ctx.font = 'bold 20px system-ui';
+          ctx.fillText(`${activeRoute.name} · ${boostTime > 0 ? 'DOŁADOWANIE!' : 'Zbieraj śnieżynki!'}`, 24, 38);
         }
       }
 
@@ -279,9 +328,9 @@
         ctx.fillStyle = '#75899a'; ctx.beginPath(); ctx.ellipse(x, y + 5, size, size * 0.75, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#9eafba'; ctx.beginPath(); ctx.ellipse(x - 6, y, size * 0.55, size * 0.3, -0.3, 0, Math.PI * 2); ctx.fill();
       }
-      function drawPenguin(x, y, hasNewSled) {
+      function drawPenguin(x, y, sledColor) {
         ctx.save(); ctx.translate(x, y);
-        ctx.strokeStyle = hasNewSled ? '#ff8c42' : '#b24857'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+        ctx.strokeStyle = sledColor; ctx.lineWidth = 8; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(-28, 17); ctx.quadraticCurveTo(0, 30, 28, 17); ctx.stroke();
         ctx.strokeStyle = '#e8f7ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-25, 23); ctx.lineTo(25, 23); ctx.stroke();
         ctx.fillStyle = '#18334e'; ctx.beginPath(); ctx.ellipse(0, -8, 24, 31, 0, 0, Math.PI * 2); ctx.fill();
@@ -294,30 +343,38 @@
 
       startButton.addEventListener('click', startGame);
       nameInput.addEventListener('keydown', event => { if (event.key === 'Enter') startGame(); });
+      routeSelect.addEventListener('change', () => { selectedRoute = routeSelect.value; draw(); save(); });
+      sledSelect.addEventListener('change', () => { selectedSled = sledSelect.value; draw(); save(); });
       boostButton.addEventListener('click', activateBoost);
       window.addEventListener('keydown', event => {
+        if (['ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
         keys[event.key] = true;
-        if (event.code === 'Space') { event.preventDefault(); activateBoost(); }
+        if (event.code === 'Space') activateBoost();
       });
       window.addEventListener('keyup', event => { keys[event.key] = false; });
+      window.addEventListener('blur', () => { heldDirections.clear(); dragging = false; });
       for (const [id, direction] of [['leftButton', -1], ['rightButton', 1]]) {
-        const button = document.getElementById(id);
-        button.addEventListener('pointerdown', event => { event.preventDefault(); pointerDirection = direction; });
-        const stop = () => { pointerDirection = 0; };
-        button.addEventListener('pointerup', stop);
-        button.addEventListener('pointerleave', stop);
-        button.addEventListener('pointercancel', stop);
+        const button = $(id);
+        button.addEventListener('pointerdown', event => { event.preventDefault(); heldDirections.add(direction); try { button.setPointerCapture(event.pointerId); } catch (error) {} });
+        const stop = event => { heldDirections.delete(direction); if (event && button.hasPointerCapture && button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId); };
+        button.addEventListener('pointerup', stop); button.addEventListener('pointercancel', stop); button.addEventListener('lostpointercapture', () => heldDirections.delete(direction));
       }
       function moveToPointer(event) {
         const rect = canvas.getBoundingClientRect();
-        targetX = Math.max(90, Math.min(810, (event.clientX - rect.left) * canvas.width / rect.width));
+        targetX = Math.max(75, Math.min(825, (event.clientX - rect.left) * canvas.width / rect.width));
       }
-      canvas.addEventListener('pointermove', event => {
-        if (state === 'running' && (event.pointerType !== 'mouse' || event.buttons !== 0)) moveToPointer(event);
-      });
       canvas.addEventListener('pointerdown', event => {
-        if (state === 'running' && event.pointerType === 'touch') moveToPointer(event);
+        if (state !== 'running' || event.pointerType === 'mouse') return;
+        dragging = true; moveToPointer(event);
+        try { canvas.setPointerCapture(event.pointerId); } catch (error) {}
       });
+      canvas.addEventListener('pointermove', event => {
+        if (state === 'running' && (dragging || (event.pointerType === 'mouse' && event.buttons !== 0))) moveToPointer(event);
+      });
+      const stopDragging = () => { dragging = false; };
+      canvas.addEventListener('pointerup', stopDragging);
+      canvas.addEventListener('pointercancel', stopDragging);
+      canvas.addEventListener('lostpointercapture', stopDragging);
     })();
   </script>
 </body>
